@@ -1,0 +1,44 @@
+# Node.js
+/node_modules/
+package-lock.json
+npm-debug.log
+
+# Logs
+*.log
+
+# Compiled output
+/dist/
+/build/
+out/
+
+# TypeScript v1 declaration files
+*.tsbuildinfo
+
+# VSCode
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# JetBrains IDEs (IntelliJ, WebStorm, etc.)
+.idea/
+
+# Angular CLI
+.angular/
+
+# Tailwind CSS
+tailwind.config.js
+postcss.config.js
+
+# Vite
+.vite/
+
+# Environment files (keep these out of source control)
+.env
+.env.*.local
+
+# Optional: build artifacts for specific frameworks/tools (keep as needed)
+dist/
