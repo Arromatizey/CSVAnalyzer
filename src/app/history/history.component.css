@@ -1,0 +1,78 @@
+/* Style général */
+.history-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* Titre principal */
+.history-container h2 {
+  font-size: 26px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Tableau stylisé */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* En-tête du tableau */
+thead {
+  background-color: #007bff;
+  color: white;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  font-size: 16px;
+}
+
+/* Effet de survol */
+tbody tr:hover {
+  background-color: #f1f1f1;
+  transition: 0.3s;
+}
+
+/* Bouton d'ouverture */
+button {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #0056b3, #003d82);
+  transform: scale(1.05);
+}
+
+/* Responsivité */
+@media (max-width: 768px) {
+  th, td {
+    padding: 10px;
+  }
+
+  button {
+    padding: 6px 12px;
+  }
+}
