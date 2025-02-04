@@ -3,9 +3,10 @@ import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  template: `<router-outlet></router-outlet>`, // Utilisation correcte du template inline
+  styleUrls: ['./app.component.css'] // Correction du nom de l'attribut
 })
 export class AppComponent {
   title = 'mon-projet-angular';
