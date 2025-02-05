@@ -1,18 +1,38 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { s3Config } from '../aws-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FileService {
-  private apiUrl = 'https://votre-api.com/upload'; // Remplace par l'URL de ton serveur
+  private s3Client: S3Client;
 
-  constructor(private http: HttpClient) {}
-
-  uploadFile(file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<any>(this.apiUrl, formData);
+  constructor() {
+    this.s3Client = new S3Client({
+      region: s3Config.region,
+      credentials: {
+        accessKeyId: s3Config.accessKeyId,
+        secretAccessKey: s3Config.secretAccessKey
+      }
+    });
   }
-}
+
+  async uploadFile(file: File): Promise<string> {
+    const params = {
+      Bucket: s3Config.bucketName, // Ensure this is set correctly
+      Key: `uploads/${file.name}`, // File path in S3
+      Body: new Uint8Array(await file.arrayBuffer()), // Convert file to ArrayBuffer
+      ContentType: file.type // Set the correct MIME type
+    };
+  
+    try {
+      const command = new PutObjectCommand(params);
+      await this.s3Client.send(command);
+      return `✅ File ${file.name} uploaded successfully!`;
+    } catch (error) {
+      console.error('❌ Error uploading file:', error);
+      throw error;
+    }
+  }
+}  

@@ -17,7 +17,11 @@
         </h2>
 
         <!-- Zone Drag & Drop -->
-        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition hover:border-blue-500">
+        <div 
+          class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition hover:border-blue-500"
+          (dragover)="onDragOver($event)" 
+          (dragleave)="onDragLeave($event)" 
+          (drop)="onFileDropped($event)">
           <input type="file" id="fileInput" (change)="onFileSelected($event)" class="hidden" accept=".csv" />
           <label for="fileInput" class="cursor-pointer block">
             <span class="text-gray-500 text-sm">Déposez un fichier ici ou</span>
@@ -28,6 +32,15 @@
         <!-- Nom du fichier sélectionné -->
         <div *ngIf="selectedFile" class="mt-3 bg-blue-50 text-blue-700 text-sm p-3 rounded-lg">
           📄 <strong>{{ selectedFile.name }}</strong>
+        </div>
+
+        <!-- Message d'état -->
+        <div *ngIf="uploadStatus" class="mt-3 text-sm p-3 rounded-lg" [ngClass]="{
+          'bg-green-100 text-green-700': uploadStatus === 'Succès',
+          'bg-yellow-100 text-yellow-700': uploadStatus === 'En cours...',
+          'bg-red-100 text-red-700': uploadStatus === 'Erreur'
+        }">
+          {{ uploadStatusMessage }}
         </div>
 
         <!-- Bouton d'envoi -->

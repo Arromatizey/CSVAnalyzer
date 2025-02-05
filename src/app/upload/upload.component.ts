@@ -11,7 +11,9 @@ import { FileService } from '../services/file.service';
 })
 export class UploadComponent {
   selectedFile?: File;
-  response: any;
+  response?: any;
+  uploadStatus: 'En cours...' | 'Succès' | 'Erreur' | null = null;
+  uploadStatusMessage = '';
 
   constructor(private fileService: FileService) {}
 
@@ -22,12 +24,38 @@ export class UploadComponent {
     }
   }
 
-  uploadFile() {
+  async uploadFile() {
     if (this.selectedFile) {
-      this.fileService.uploadFile(this.selectedFile).subscribe(
-        (res) => (this.response = res),
-        (err) => console.error('Erreur lors de l\'upload :', err)
-      );
+      try {
+        this.uploadStatus = 'En cours...';
+        this.uploadStatusMessage = '📡 Upload en cours...';
+        await this.fileService.uploadFile(this.selectedFile);
+        this.uploadStatus = 'Succès';
+        this.uploadStatusMessage = '✅ Fichier envoyé avec succès!';
+      } catch (error) {
+        this.uploadStatus = 'Erreur';
+        this.uploadStatusMessage = '❌ Erreur lors de l’envoi du fichier.';
+      }
+    }
+  }
+
+  // Drag & Drop Handlers
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onFileDropped(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      this.selectedFile = event.dataTransfer.files[0];
     }
   }
 }
