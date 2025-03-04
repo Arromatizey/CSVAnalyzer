@@ -16,7 +16,9 @@ export class UploadComponent {
   uploadStatus: 'En cours...' | 'Succès' | 'Erreur' | null = null;
   uploadStatusMessage = '';
   responsee: any = null; // Stores fetched file details
-
+  sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
   constructor(private fileService: FileService) {}
 
   onFileSelected(event: Event) {
@@ -39,6 +41,8 @@ export class UploadComponent {
         this.uploadStatusMessage = '❌ Erreur lors de l’envoi du fichier.';
       }
     }
+    await this.sleep(4000);
+
     try {
       const uploads = await this.fileService.listFiles('uploads/');
       const reports = await this.fileService.listFiles('reports/');

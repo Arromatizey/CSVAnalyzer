@@ -36,7 +36,7 @@ export class FileService {
     }
   }
 
-  async listFiles(folder: string): Promise<{ key: string; url: string; content?: string }[]> {
+  async listFiles(folder: string): Promise<{ key: string; url: string; content?: string; lastModified?: string }[]> {
     // Ensure folder path ends with '/'
     const folderPath = folder.endsWith("/") ? folder : `${folder}/`;
   
@@ -57,6 +57,7 @@ export class FileService {
           .map(async item => {
             const fileKey = item.Key!;
             const url = `https://${s3Config.bucketName}.s3.${s3Config.region}.amazonaws.com/${fileKey}`;
+            const lastModified = item.LastModified?.toISOString(); // Adding the LastModified field
   
             try {
               // Fetch file content
@@ -71,10 +72,10 @@ export class FileService {
               // Convert stream to string
               const content = await this.streamToString(bodyStream);
   
-              return { key: fileKey, url, content };
+              return { key: fileKey, url, content, lastModified }; // Include lastModified in the return value
             } catch (error) {
               console.error(`❌ Error fetching content for ${fileKey}:`, error);
-              return { key: fileKey, url, content: undefined };
+              return { key: fileKey, url, content: undefined, lastModified }; // Include lastModified even in case of error
             }
           })
       );
