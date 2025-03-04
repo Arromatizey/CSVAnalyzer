@@ -76,10 +76,11 @@ export class UploadComponent {
         reports.sort((a: any, b: any) => {
           return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
         });
-
-        // Prendre le plus récent
-        const lastReport = reports[0];
-        if (lastReport.content) {
+  
+          const fileName = this.selectedFile ? this.selectedFile.name.replace(/\.[^/.]+$/, "") : "";
+          console.log('fileName:', fileName);
+          const lastReport = reports.find(report => this.selectedFile && report.key.includes(fileName));
+        if (lastReport && lastReport.content) {
           let parsedJson = JSON.parse(lastReport.content);
 
           // Si c'est un seul objet => on le force en tableau
