@@ -66,175 +66,197 @@
 
       <!-- Bloc Résultat global -->
       <div class="w-full lg:w-2/3 bg-white rounded-lg shadow-md p-8">
-        <!-- S'il n'y a pas de 'lastAnalysis', on affiche un message. Sinon, on affiche les données -->
-        <ng-container *ngIf="lastAnalysis?.length > 0; else noAnalysisYet">
-          <h2 class="text-lg font-semibold text-gray-700 mb-6 uppercase">
-            Dernier rapport d'analyse
-          </h2>
 
-          <!-- On itère sur chaque entrée du tableau 'lastAnalysis' -->
-          <div
-            *ngFor="let item of lastAnalysis"
-            class="mb-6 p-4 border rounded bg-gray-50"
-          >
-            <!-- Nom du fichier -->
-            <p class="text-base font-semibold text-gray-800 mb-2">
-              <strong>Fichier :</strong> {{ item.fichier }}
+        <!-- 1) Si loading == true, on affiche l'écran de chargement -->
+        <ng-container *ngIf="loading; else normalState">
+          <div class="flex flex-col items-center justify-center min-h-[300px]">
+            <!-- Spinner Tailwind -->
+            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+            <p class="text-gray-700 text-sm">
+              Analyse en cours, veuillez patienter...
             </p>
-
-            <!-- Bloc Statistiques -->
-            <div class="mb-4">
-              <h3 class="text-sm font-bold mb-2 text-gray-800 uppercase tracking-wider">
-                Statistiques
-              </h3>
-              <ul class="text-sm text-gray-700 space-y-1">
-                <li>
-                  <strong>Prix - Moyenne :</strong>
-                  {{ item.statistiques?.["Prix"]?.["moyenne"] }}
-                </li>
-                <li>
-                  <strong>Prix - Médiane :</strong>
-                  {{ item.statistiques?.["Prix"]?.["médiane"] }}
-                </li>
-                <li>
-                  <strong>Prix - Écart type :</strong>
-                  {{ item.statistiques?.["Prix"]?.["écart_type"] }}
-                </li>
-
-                <li class="mt-2">
-                  <strong>Quantité - Moyenne :</strong>
-                  {{ item.statistiques?.["Quantité"]?.["moyenne"] }}
-                </li>
-                <li>
-                  <strong>Quantité - Médiane :</strong>
-                  {{ item.statistiques?.["Quantité"]?.["médiane"] }}
-                </li>
-                <li>
-                  <strong>Quantité - Écart type :</strong>
-                  {{ item.statistiques?.["Quantité"]?.["écart_type"] }}
-                </li>
-
-                <li class="mt-2">
-                  <strong>Note Client - Moyenne :</strong>
-                  {{ item.statistiques?.["Note_Client"]?.["moyenne"] }}
-                </li>
-                <li>
-                  <strong>Note Client - Médiane :</strong>
-                  {{ item.statistiques?.["Note_Client"]?.["médiane"] }}
-                </li>
-                <li>
-                  <strong>Note Client - Écart type :</strong>
-                  {{ item.statistiques?.["Note_Client"]?.["écart_type"] }}
-                </li>
-              </ul>
-            </div>
-
-            <!-- Bloc Anomalies (si existantes) -->
-            <div
-              *ngIf="
-                item.anomalies &&
-                (
-                  item.anomalies['prix']?.length > 0 ||
-                  item.anomalies['quantité']?.length > 0 ||
-                  item.anomalies['Note_Client']?.length > 0
-                )
-              "
-              class="border-l-4 border-red-400 pl-4 bg-red-50 py-2 px-2 rounded"
-            >
-              <h3
-                class="text-sm font-bold mb-2 text-red-700 uppercase tracking-wider"
-              >
-                Anomalies détectées
-              </h3>
-
-              <!-- Anomalies sur Prix -->
-              <div *ngIf="item.anomalies['prix']?.length > 0" class="mb-2">
-                <p class="text-sm font-bold text-red-700">Prix anormaux :</p>
-                <ul class="ml-4 list-disc text-sm text-gray-700">
-                  <li *ngFor="let anom of item.anomalies['prix']">
-                    <strong>ID : </strong>{{ anom.ID }},
-                    <strong>Nom : </strong>{{ anom.Nom }},
-                    <strong>Prix : </strong>{{ anom.Prix }}
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Anomalies sur Quantité -->
-              <div *ngIf="item.anomalies['quantité']?.length > 0" class="mb-2">
-                <p class="text-sm font-bold text-red-700">Quantités anormales :</p>
-                <ul class="ml-4 list-disc text-sm text-gray-700">
-                  <li *ngFor="let anom of item.anomalies['quantité']">
-                    <strong>ID : </strong>{{ anom.ID }},
-                    <strong>Nom : </strong>{{ anom.Nom }},
-                    <strong>Quantité : </strong>{{ anom["Quantité"] }}
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Anomalies sur Note_Client -->
-              <div *ngIf="item.anomalies['Note_Client']?.length > 0" class="mb-2">
-                <p class="text-sm font-bold text-red-700">Notes Clients anormales :</p>
-                <ul class="ml-4 list-disc text-sm text-gray-700">
-                  <li *ngFor="let anom of item.anomalies['Note_Client']">
-                    <strong>ID : </strong>{{ anom.ID }},
-                    <strong>Nom : </strong>{{ anom.Nom }},
-                    <strong>Note_Client : </strong>{{ anom.Note_Client }}
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <!-- Boutons: Voir l'historique + Télécharger JSON -->
-          <div class="flex gap-3">
-            <button
-              (click)="showHistoryModal = true"
-              class="inline-flex items-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M8 16l4-4 4 4m-4-4v12"
-                />
-              </svg>
-              Voir l'historique
-            </button>
-
-            <!-- Bouton pour télécharger le dernier rapport JSON -->
-            <button
-              (click)="downloadLastAnalysisAsJson()"
-              class="inline-flex items-center bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Télécharger JSON
-            </button>
           </div>
         </ng-container>
 
-        <!-- Message à afficher si lastAnalysis est vide ou inexistant -->
-        <ng-template #noAnalysisYet>
-          <p class="text-gray-500 text-center">
-            Aucune analyse effectuée. Importez un fichier pour voir les résultats.
-          </p>
+        <!-- 2) Sinon, on affiche l'état normal (dernier rapport OU message) -->
+        <ng-template #normalState>
+          <!-- S'il n'y a pas de 'lastAnalysis', on affiche un message. Sinon, on affiche les données -->
+          <ng-container *ngIf="lastAnalysis?.length > 0; else noAnalysisYet">
+            <h2 class="text-lg font-semibold text-gray-700 mb-6 uppercase">
+              Dernier rapport d'analyse
+            </h2>
+
+            <!-- On itère sur chaque entrée du tableau 'lastAnalysis' -->
+            <div
+              *ngFor="let item of lastAnalysis"
+              class="mb-6 p-4 border rounded bg-gray-50"
+            >
+              <!-- Nom du fichier -->
+              <p class="text-base font-semibold text-gray-800 mb-2">
+                <strong>Fichier :</strong> {{ item.fichier }}
+              </p>
+
+              <!-- Bloc Statistiques -->
+              <div class="mb-4">
+                <h3 class="text-sm font-bold mb-2 text-gray-800 uppercase tracking-wider">
+                  Statistiques
+                </h3>
+                <ul class="text-sm text-gray-700 space-y-1">
+                  <li>
+                    <strong>Prix - Moyenne :</strong>
+                    {{ item.statistiques?.["Prix"]?.["moyenne"] }}
+                  </li>
+                  <li>
+                    <strong>Prix - Médiane :</strong>
+                    {{ item.statistiques?.["Prix"]?.["médiane"] }}
+                  </li>
+                  <li>
+                    <strong>Prix - Écart type :</strong>
+                    {{ item.statistiques?.["Prix"]?.["écart_type"] }}
+                  </li>
+
+                  <li class="mt-2">
+                    <strong>Quantité - Moyenne :</strong>
+                    {{ item.statistiques?.["Quantité"]?.["moyenne"] }}
+                  </li>
+                  <li>
+                    <strong>Quantité - Médiane :</strong>
+                    {{ item.statistiques?.["Quantité"]?.["médiane"] }}
+                  </li>
+                  <li>
+                    <strong>Quantité - Écart type :</strong>
+                    {{ item.statistiques?.["Quantité"]?.["écart_type"] }}
+                  </li>
+
+                  <li class="mt-2">
+                    <strong>Note Client - Moyenne :</strong>
+                    {{ item.statistiques?.["Note_Client"]?.["moyenne"] }}
+                  </li>
+                  <li>
+                    <strong>Note Client - Médiane :</strong>
+                    {{ item.statistiques?.["Note_Client"]?.["médiane"] }}
+                  </li>
+                  <li>
+                    <strong>Note Client - Écart type :</strong>
+                    {{ item.statistiques?.["Note_Client"]?.["écart_type"] }}
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Bloc Anomalies (si existantes) -->
+              <div
+                *ngIf="
+                  item.anomalies &&
+                  (
+                    item.anomalies['prix']?.length > 0 ||
+                    item.anomalies['quantité']?.length > 0 ||
+                    item.anomalies['Note_Client']?.length > 0
+                  )
+                "
+                class="border-l-4 border-red-400 pl-4 bg-red-50 py-2 px-2 rounded"
+              >
+                <h3
+                  class="text-sm font-bold mb-2 text-red-700 uppercase tracking-wider"
+                >
+                  Anomalies détectées
+                </h3>
+
+                <!-- Anomalies sur Prix -->
+                <div *ngIf="item.anomalies['prix']?.length > 0" class="mb-2">
+                  <p class="text-sm font-bold text-red-700">Prix anormaux :</p>
+                  <ul class="ml-4 list-disc text-sm text-gray-700">
+                    <li *ngFor="let anom of item.anomalies['prix']">
+                      <strong>ID : </strong>{{ anom.ID }},
+                      <strong>Nom : </strong>{{ anom.Nom }},
+                      <strong>Prix : </strong>{{ anom.Prix }}
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Anomalies sur Quantité -->
+                <div *ngIf="item.anomalies['quantité']?.length > 0" class="mb-2">
+                  <p class="text-sm font-bold text-red-700">Quantités anormales :</p>
+                  <ul class="ml-4 list-disc text-sm text-gray-700">
+                    <li *ngFor="let anom of item.anomalies['quantité']">
+                      <strong>ID : </strong>{{ anom.ID }},
+                      <strong>Nom : </strong>{{ anom.Nom }},
+                      <strong>Quantité : </strong>{{ anom["Quantité"] }}
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Anomalies sur Note_Client -->
+                <div
+                  *ngIf="item.anomalies['Note_Client']?.length > 0"
+                  class="mb-2"
+                >
+                  <p class="text-sm font-bold text-red-700">
+                    Notes Clients anormales :
+                  </p>
+                  <ul class="ml-4 list-disc text-sm text-gray-700">
+                    <li
+                      *ngFor="let anom of item.anomalies['Note_Client']"
+                    >
+                      <strong>ID : </strong>{{ anom.ID }},
+                      <strong>Nom : </strong>{{ anom.Nom }},
+                      <strong>Note_Client : </strong>{{ anom.Note_Client }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Boutons: Voir l'historique + Télécharger JSON -->
+            <div class="flex gap-3">
+              <button
+                (click)="showHistoryModal = true"
+                class="inline-flex items-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8 16l4-4 4 4m-4-4v12"
+                  />
+                </svg>
+                Voir l'historique
+              </button>
+
+              <!-- Bouton pour télécharger le dernier rapport JSON -->
+              <button
+                (click)="downloadLastAnalysisAsJson()"
+                class="inline-flex items-center bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Télécharger JSON
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Si lastAnalysis est vide -> message noAnalysisYet -->
+          <ng-template #noAnalysisYet>
+            <p class="text-gray-500 text-center">
+              Aucune analyse effectuée. Importez un fichier pour voir les résultats.
+            </p>
+          </ng-template>
         </ng-template>
       </div>
     </div>
