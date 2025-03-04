@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import {Component, input} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FileService } from '../services/file.service';
+import {resolve} from 'node:path';
+//import {error} from '@angular/compiler-cli/src/transformers/util';
 
 
 @Component({
@@ -11,11 +13,24 @@ import { FileService } from '../services/file.service';
   styleUrls: ['./upload.component.css']
 })
 export class UploadComponent {
+  get parsedJson(): any {
+    return this._parsedJson;
+  }
+
+  set parsedJson(value: any) {
+    this._parsedJson = value;
+  }
+
+  lastAnalysis: any = null;       // Contient l’objet du dernier rapport analysé
+  analysisHistory: any[] = [];    // Contient l’historique complet des rapports
+  showHistoryModal = false;       // Gère l'ouverture/fermeture de la popup
+
   selectedFile?: File;
   response?: any;
   uploadStatus: 'En cours...' | 'Succès' | 'Erreur' | null = null;
   uploadStatusMessage = '';
   responsee: any = null; // Stores fetched file details
+  private _parsedJson: any;
   sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -41,28 +56,91 @@ export class UploadComponent {
         this.uploadStatusMessage = '❌ Erreur lors de l’envoi du fichier.';
       }
     }
-    await this.sleep(4000);
+    await this.sleep(5000);
 
     try {
-      const uploads = await this.fileService.listFiles('uploads/');
       const reports = await this.fileService.listFiles('reports/');
-
-      console.log('uploads:', uploads);
       console.log('reports:', reports);
-      this.responsee = {
-        date: new Date().toLocaleString(),
-        size: `${uploads.length + reports.length} fichiers`,
-        status: 'Analyse terminée',
-        summary: [...uploads.map(f => f.key), ...reports.map(f => f.key)]
-      };
+
+      if (reports.length > 0) {
+        // 1) Trier du plus récent au plus ancien via lastModified
+        reports.sort((a: any, b: any) => {
+          return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
+        });
+
+        // 2) Le plus récent => reports[0]
+        const lastReport = reports[0];
+
+        if (lastReport.content != null) {
+          let parsedJson = JSON.parse(lastReport.content);
+
+          // 3) Forcer en tableau si c'est un objet
+          if (!Array.isArray(parsedJson)) {
+            parsedJson = [parsedJson];
+          }
+
+          // 4) Build lastAnalysis
+          this.lastAnalysis = parsedJson.map((item: any) => {
+            return {
+              fichier: item.fichier,
+              statistiques: {
+                Prix: {
+                  moyenne: item.statistiques?.Prix?.moyenne,
+                  ["médiane"]: item.statistiques?.Prix?.["médiane"],
+                  ["écart_type"]: item.statistiques?.Prix?.["écart_type"]
+                },
+                ["Quantité"]: {
+                  moyenne: item.statistiques?.Quantité?.moyenne,
+                  ["médiane"]: item.statistiques?.Quantité?.["médiane"],
+                  ["écart_type"]: item.statistiques?.Quantité?.["écart_type"]
+                },
+                ["Note_Client"]: {
+                  moyenne: item.statistiques?.Note_Client?.moyenne,
+                  ["médiane"]: item.statistiques?.Note_Client?.["médiane"],
+                  ["écart_type"]: item.statistiques?.Note_Client?.["écart_type"]
+                }
+              },
+              anomalies: {
+                ["prix"]: item.anomalies?.["prix"] ?? [],
+                ["quantité"]: item.anomalies?.["quantité"] ?? [],
+                ["Note_Client"]: item.anomalies?.["Note_Client"] ?? []
+              }
+            };
+          });
+
+          // 5) Historique (si vous voulez tous les rapports)
+          this.analysisHistory = reports.map(r => JSON.parse(<any>r.content));
+
+          console.log('Dernière analyse:', this.lastAnalysis);
+        }
+      }
     } catch (error) {
-      console.error('Error fetching files:', error);
-      this.responsee = {
-        status: 'Erreur',
-        errors: ['Impossible de récupérer les fichiers S3']
-      };
+      console.error('Error fetching reports:', error);
     }
   }
+
+  downloadLastAnalysisAsJson() {
+    if (!this.lastAnalysis || this.lastAnalysis.length === 0) {
+      return; // Rien à télécharger
+    }
+
+    // Convertir le "dernier rapport" (this.lastAnalysis) en JSON "joli"
+    const jsonData = JSON.stringify(this.lastAnalysis, null, 2);
+
+    // Créer un blob
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    // Créer un <a> caché qui déclenche le téléchargement
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'dernier_rapport.json'; // Nom du fichier
+    link.click();
+
+    // Nettoyer l’URL blob
+    URL.revokeObjectURL(url);
+  }
+
 
   // Drag & Drop Handlers
   onDragOver(event: DragEvent) {

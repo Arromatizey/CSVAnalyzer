@@ -25,7 +25,7 @@ export class FileService {
       Body: new Uint8Array(await file.arrayBuffer()), // Convert file to ArrayBuffer
       ContentType: file.type // Set the correct MIME type
     };
-  
+
     try {
       const command = new PutObjectCommand(params);
       await this.s3Client.send(command);
@@ -39,17 +39,17 @@ export class FileService {
   async listFiles(folder: string): Promise<{ key: string; url: string; content?: string; lastModified?: string }[]> {
     // Ensure folder path ends with '/'
     const folderPath = folder.endsWith("/") ? folder : `${folder}/`;
-  
+
     const params = {
       Bucket: s3Config.bucketName,
       Prefix: folderPath,
     };
-  
+
     try {
       const command = new ListObjectsV2Command(params);
       const response = await this.s3Client.send(command);
       console.log("S3 response contents:", response.Contents);
-  
+
       // Fetch CSV and JSON file contents
       const files = await Promise.all(
         (response.Contents || [])
@@ -58,20 +58,20 @@ export class FileService {
             const fileKey = item.Key!;
             const url = `https://${s3Config.bucketName}.s3.${s3Config.region}.amazonaws.com/${fileKey}`;
             const lastModified = item.LastModified?.toISOString(); // Adding the LastModified field
-  
+
             try {
               // Fetch file content
               const getObjectCommand = new GetObjectCommand({
                 Bucket: s3Config.bucketName,
                 Key: fileKey,
               });
-  
+
               const fileResponse = await this.s3Client.send(getObjectCommand);
               const bodyStream = fileResponse.Body;
-  
+
               // Convert stream to string
               const content = await this.streamToString(bodyStream);
-  
+
               return { key: fileKey, url, content, lastModified }; // Include lastModified in the return value
             } catch (error) {
               console.error(`❌ Error fetching content for ${fileKey}:`, error);
@@ -79,7 +79,7 @@ export class FileService {
             }
           })
       );
-  
+
       return files;
     } catch (error) {
       console.error("❌ Error listing files:", error);
@@ -92,7 +92,7 @@ export class FileService {
     for await (const chunk of stream) {
       chunks.push(chunk);
     }
-  
+
     // Use TextDecoder instead of Buffer to decode the stream into a string
     const decoder = new TextDecoder("utf-8");
     const concatenatedChunks = new Uint8Array(chunks.reduce((acc, chunk) => {
@@ -103,4 +103,5 @@ export class FileService {
     }, new Uint8Array()));
     return decoder.decode(concatenatedChunks);
   }
+
 }
