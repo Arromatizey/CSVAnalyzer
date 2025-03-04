@@ -50,6 +50,7 @@ export class UploadComponent {
         this.uploadStatusMessage = '📡 Upload en cours...';
         await this.fileService.uploadFile(this.selectedFile);
         this.uploadStatus = 'Succès';
+        console.log('this.selectedFile:', this.selectedFile.name);
         this.uploadStatusMessage = '✅ Fichier envoyé avec succès!';
       } catch (error) {
         this.uploadStatus = 'Erreur';
@@ -63,15 +64,12 @@ export class UploadComponent {
       console.log('reports:', reports);
 
       if (reports.length > 0) {
-        // 1) Trier du plus récent au plus ancien via lastModified
-        reports.sort((a: any, b: any) => {
-          return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
-        });
-
-        // 2) Le plus récent => reports[0]
-        const lastReport = reports[0];
-
-        if (lastReport.content != null) {
+   
+      
+        const fileName = this.selectedFile ? this.selectedFile.name.replace(/\.[^/.]+$/, "") : "";
+        console.log('fileName:', fileName);
+        const lastReport = reports.find(report => this.selectedFile && report.key.includes(fileName));
+        if (lastReport && lastReport.content != null) {
           let parsedJson = JSON.parse(lastReport.content);
 
           // 3) Forcer en tableau si c'est un objet
