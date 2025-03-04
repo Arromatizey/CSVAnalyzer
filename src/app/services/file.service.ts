@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, ListObjectsV2Command, _Object, ListObjectsV2CommandOutput, GetObjectCommand } from '@aws-sdk/client-s3';
 import { s3Config } from '../aws-config';
 
 @Injectable({
@@ -35,4 +35,71 @@ export class FileService {
       throw error;
     }
   }
-}  
+
+  async listFiles(folder: string): Promise<{ key: string; url: string; content?: string }[]> {
+    // Ensure folder path ends with '/'
+    const folderPath = folder.endsWith("/") ? folder : `${folder}/`;
+  
+    const params = {
+      Bucket: s3Config.bucketName,
+      Prefix: folderPath,
+    };
+  
+    try {
+      const command = new ListObjectsV2Command(params);
+      const response = await this.s3Client.send(command);
+      console.log("S3 response contents:", response.Contents);
+  
+      // Fetch CSV and JSON file contents
+      const files = await Promise.all(
+        (response.Contents || [])
+          .filter(item => item.Key !== folderPath && (item.Key?.endsWith(".csv") || item.Key?.endsWith(".json")))
+          .map(async item => {
+            const fileKey = item.Key!;
+            const url = `https://${s3Config.bucketName}.s3.${s3Config.region}.amazonaws.com/${fileKey}`;
+  
+            try {
+              // Fetch file content
+              const getObjectCommand = new GetObjectCommand({
+                Bucket: s3Config.bucketName,
+                Key: fileKey,
+              });
+  
+              const fileResponse = await this.s3Client.send(getObjectCommand);
+              const bodyStream = fileResponse.Body;
+  
+              // Convert stream to string
+              const content = await this.streamToString(bodyStream);
+  
+              return { key: fileKey, url, content };
+            } catch (error) {
+              console.error(`❌ Error fetching content for ${fileKey}:`, error);
+              return { key: fileKey, url, content: undefined };
+            }
+          })
+      );
+  
+      return files;
+    } catch (error) {
+      console.error("❌ Error listing files:", error);
+      throw error;
+    }
+  }
+
+  private async streamToString(stream: any): Promise<string> {
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+  
+    // Use TextDecoder instead of Buffer to decode the stream into a string
+    const decoder = new TextDecoder("utf-8");
+    const concatenatedChunks = new Uint8Array(chunks.reduce((acc, chunk) => {
+      const temp = new Uint8Array(acc.length + chunk.length);
+      temp.set(acc, 0);
+      temp.set(chunk, acc.length);
+      return temp;
+    }, new Uint8Array()));
+    return decoder.decode(concatenatedChunks);
+  }
+}

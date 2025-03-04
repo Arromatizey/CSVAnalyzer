@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FileService } from '../services/file.service';
 
+
 @Component({
   selector: 'app-upload',
   standalone: true,
@@ -14,6 +15,7 @@ export class UploadComponent {
   response?: any;
   uploadStatus: 'En cours...' | 'Succès' | 'Erreur' | null = null;
   uploadStatusMessage = '';
+  responsee: any = null; // Stores fetched file details
 
   constructor(private fileService: FileService) {}
 
@@ -36,6 +38,25 @@ export class UploadComponent {
         this.uploadStatus = 'Erreur';
         this.uploadStatusMessage = '❌ Erreur lors de l’envoi du fichier.';
       }
+    }
+    try {
+      const uploads = await this.fileService.listFiles('uploads/');
+      const reports = await this.fileService.listFiles('reports/');
+
+      console.log('uploads:', uploads);
+      console.log('reports:', reports);
+      this.responsee = {
+        date: new Date().toLocaleString(),
+        size: `${uploads.length + reports.length} fichiers`,
+        status: 'Analyse terminée',
+        summary: [...uploads.map(f => f.key), ...reports.map(f => f.key)]
+      };
+    } catch (error) {
+      console.error('Error fetching files:', error);
+      this.responsee = {
+        status: 'Erreur',
+        errors: ['Impossible de récupérer les fichiers S3']
+      };
     }
   }
 

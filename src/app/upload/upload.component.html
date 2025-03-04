@@ -51,14 +51,12 @@
         </button>
       </div>
 
-      <!-- Bloc Résultats -->
       <div class="w-full lg:w-2/3 bg-white rounded-lg shadow-md p-8">
         <h2 class="text-lg font-semibold text-gray-700 mb-6 uppercase" *ngIf="response">
           Résultats de l'analyse
         </h2>
-
+      
         <div *ngIf="response; else emptyState">
-
           <!-- Bloc Informations Générales -->
           <div class="mb-6 p-6 rounded-lg bg-[#F8F5F0] border border-gray-200">
             <h3 class="text-sm font-bold text-gray-800 mb-3">📊 Informations Générales</h3>
@@ -66,7 +64,7 @@
             <p class="text-sm text-gray-600"><strong>Taille :</strong> {{ response.size }}</p>
             <p class="text-sm text-gray-600"><strong>Statut :</strong> <span class="text-blue-600">{{ response.status }}</span></p>
           </div>
-
+      
           <!-- Bloc Erreurs / Anomalies -->
           <div class="mb-6 p-6 rounded-lg bg-[#FCE8E6] border border-red-300" *ngIf="response.errors?.length > 0">
             <h3 class="text-sm font-bold text-red-700 mb-3">⚠️ Anomalies détectées</h3>
@@ -76,23 +74,21 @@
               </li>
             </ul>
           </div>
-
-          <!-- Bloc Résumé des Données -->
+      
+          <!-- Bloc Résumé des Données (Affichage des fichiers S3) -->
           <div class="p-6 rounded-lg bg-[#E3F2FD] border border-blue-300">
-            <h3 class="text-sm font-bold text-blue-800 mb-3">📋 Résumé des données</h3>
+            <h3 class="text-sm font-bold text-blue-800 mb-3">📋 Fichiers Récupérés</h3>
             <ul class="space-y-2">
               <li *ngFor="let item of response.summary" class="text-sm text-blue-700">
-                ✅ {{ item }}
+                ✅ <a [href]="'https://' + item" target="_blank" class="text-blue-600 hover:underline">{{ item }}</a>
               </li>
             </ul>
           </div>
-
         </div>
-
+      
         <ng-template #emptyState>
           <p class="text-gray-500 text-center">Aucune analyse effectuée. Importez un fichier pour voir les résultats.</p>
         </ng-template>
-
       </div>
     </div>
   </main>
